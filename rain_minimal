@@ -1,0 +1,156 @@
+--[[
+    A minimal version of rain.
+    For those who don't need all the fancy options.
+]]
+
+local component = require("component")
+local event     = require("event")
+local gpu = component.gpu
+
+local wid, hig = gpu.getResolution()
+
+local args = {...}
+local ii = 1
+for i=1,#args do
+    if args[ii] == "-v" or args[ii] == "--version" then
+        print("Rain (minimal) v1.0")
+        print("By minater247")
+        os.exit()
+    elseif args[ii] == "-h" or args[ii] == "--help" then
+        print("usage: rain_minimal [-v|--version] [-h|--help]")
+        os.exit()
+    else
+        print("arg_error: unknown argument " .. args[ii])
+        print("usage: rain_minimal [-v|--version] [-h|--help]")
+        os.exit()
+    end
+    ii = ii + 1
+end
+
+
+
+local function genchars(len)
+    local str = ""
+    for i=1, len do
+        local s = string.char(math.random(32, 126))
+        if s == " " then
+            s = "&"
+        end
+        str = str .. s
+    end
+    return str
+end
+local charset = genchars(1000)
+local charsetlen = 1000
+local currchar = 1
+
+
+local Drops = {}
+local function createDrop()
+    local drop = {}
+    drop.x = math.random(1, wid)
+    if math.random() < 0.33 then
+        drop.y = math.random(1, math.floor(hig / 2))
+    else
+        drop.y = 1
+    end
+    drop.char = charset:sub(currchar, currchar)
+    currchar = currchar + 1
+    if currchar > charsetlen then
+        currchar = 1
+    end
+    table.insert(Drops, drop)
+end
+
+local function moveDropsDown()
+    for i, drop in ipairs(Drops) do
+        drop.y = drop.y + 1
+        if drop.y > hig then
+            table.remove(Drops, i)
+        end
+    end
+end
+
+local Screen = {}
+for y=1, hig do
+    Screen[y] = {}
+    for x=1, wid do
+        Screen[y][x] = 0
+    end
+end
+
+local emptyScreen = Screen
+local drawableScreen = Screen
+
+local function subtractOne()
+    for y=1, hig do
+        for x=1, wid do
+            if Screen[y][x] > 0 then
+                Screen[y][x] = Screen[y][x] - 1
+            end
+        end
+    end
+end
+
+local screencolors = {
+    0x000000,
+    0x002400,
+    0x004900,
+    0x006d00,
+    0x009200,
+    0x00b600,
+    0x00db00,
+    0x00ff00
+}
+
+local function drawScreen()
+    gpu.setBackground(0x000000)
+    for y=1, hig do
+        for x=1, wid do
+            if Screen[y][x] > 0 then
+                if Screen[y][x] > #screencolors then
+                    gpu.setForeground(screencolors[#screencolors])
+                else
+                    gpu.setForeground(screencolors[Screen[y][x]])
+                end
+                gpu.set(x, y, charset:sub(currchar, currchar))
+                currchar = currchar + 1
+            else
+                gpu.set(x, y, " ")
+            end
+        end
+    end
+end
+
+
+local function addDropsToScreen()
+    for i, drop in ipairs(Drops) do
+        Screen[drop.y][drop.x] = math.random(4, math.floor(hig / 2))
+    end
+end
+
+local function drawDrops()
+    gpu.setForeground(0xFFFFFF)
+    for i, drop in ipairs(Drops) do
+        gpu.set(drop.x, drop.y, drop.char)
+    end
+end
+
+local iter = 0
+while true do
+    moveDropsDown()
+    subtractOne()
+    if #Drops < 50 then
+        createDrop()
+    end
+    addDropsToScreen()
+    drawScreen()
+    drawDrops()
+    local ev = event.pull(0.35, "key_down")
+    if ev then
+        gpu.fill(1, 1, wid, hig, " ")
+        io.write("\x1b[1;1H") --terminal escape to 1,1
+        break
+    end
+    iter = iter + 1
+end
