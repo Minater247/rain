@@ -146,7 +146,7 @@ while true do
     addDropsToScreen()
     drawScreen()
     drawDrops()
-    local ev = event.pull(0.35, "key_down")
+    local ev = event.pull(0.035, "key_down")
     if ev then
         gpu.fill(1, 1, wid, hig, " ")
         io.write("\x1b[1;1H") --terminal escape to 1,1
