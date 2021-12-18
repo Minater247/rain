@@ -6,6 +6,11 @@ A fast matrix-like terminal rain for OpenComputers.
 It includes many options for cosmetic changes, such as 8 colors, configurable amount/rate of drops, whether the tails are colored or white, and more!
 
 To run it once, these pastebin links are available:
+
+Full version:
+
 https://pastebin.com/ifR4vPDV
 
-https://pastebin.com/ykdRDgye (minimal ver)
+Minimal version, no cosmetic options but smaller:
+
+https://pastebin.com/ykdRDgye
